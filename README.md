@@ -1,7 +1,5 @@
 # gamefi-erc1155-protocol
 
-# gamefi-erc1155-protocol
-
 ## Project Topic
 We selected **Option B — GameFi Economy**.
 
