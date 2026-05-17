@@ -1,0 +1,14 @@
+{
+  "name": "gamefi-economy-subgraph",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "codegen": "graph codegen",
+    "build": "graph build",
+    "deploy:base-sepolia": "graph deploy gamefi-economy-base-sepolia subgraph.yaml"
+  },
+  "devDependencies": {
+    "@graphprotocol/graph-cli": "^0.97.0",
+    "@graphprotocol/graph-ts": "^0.37.0"
+  }
+}

@@ -1,0 +1,42 @@
+type Swap @entity(immutable: true) {
+  id: Bytes!
+  trader: Bytes!
+  tokenIn: Bytes!
+  tokenOut: Bytes!
+  amountIn: BigInt!
+  amountOut: BigInt!
+  blockNumber: BigInt!
+  timestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type LiquidityEvent @entity(immutable: true) {
+  id: Bytes!
+  provider: Bytes!
+  action: String!
+  amountA: BigInt!
+  amountB: BigInt!
+  liquidity: BigInt!
+  blockNumber: BigInt!
+  timestamp: BigInt!
+}
+
+type CraftedItem @entity(immutable: true) {
+  id: Bytes!
+  player: Bytes!
+  itemId: BigInt!
+  amount: BigInt!
+  blockNumber: BigInt!
+  timestamp: BigInt!
+}
+
+type ProposalVote @entity(immutable: true) {
+  id: Bytes!
+  voter: Bytes!
+  proposalId: BigInt!
+  support: Int!
+  weight: BigInt!
+  reason: String!
+  blockNumber: BigInt!
+  timestamp: BigInt!
+}

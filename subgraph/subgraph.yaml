@@ -1,0 +1,66 @@
+specVersion: 1.2.0
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: ResourceAMM
+    network: base-sepolia
+    source:
+      abi: ResourceAMM
+      startBlock: 0
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - Swap
+        - LiquidityEvent
+      abis:
+        - name: ResourceAMM
+          file: ../out/ResourceAMM.sol/ResourceAMM.json
+      eventHandlers:
+        - event: Swapped(indexed address,indexed address,indexed address,uint256,uint256)
+          handler: handleSwapped
+        - event: LiquidityAdded(indexed address,uint256,uint256,uint256)
+          handler: handleLiquidityAdded
+        - event: LiquidityRemoved(indexed address,uint256,uint256,uint256)
+          handler: handleLiquidityRemoved
+      file: ./src/resource-amm.ts
+  - kind: ethereum
+    name: GameItems
+    network: base-sepolia
+    source:
+      abi: GameItems
+      startBlock: 0
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - CraftedItem
+      abis:
+        - name: GameItems
+          file: ../out/GameItems.sol/GameItems.json
+      eventHandlers:
+        - event: Crafted(indexed address,indexed uint256,uint256)
+          handler: handleCrafted
+      file: ./src/game-items.ts
+  - kind: ethereum
+    name: GameGovernor
+    network: base-sepolia
+    source:
+      abi: GameGovernor
+      startBlock: 0
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - ProposalVote
+      abis:
+        - name: GameGovernor
+          file: ../out/GameGovernor.sol/GameGovernor.json
+      eventHandlers:
+        - event: VoteCast(indexed address,uint256,uint8,uint256,string)
+          handler: handleVoteCast
+      file: ./src/governor.ts
