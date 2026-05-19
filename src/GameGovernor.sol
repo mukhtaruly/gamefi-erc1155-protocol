@@ -89,4 +89,22 @@ contract GameGovernor is
     function _executor() internal view override(Governor, GovernorTimelockControl) returns (address) {
         return super._executor();
     }
+
+
+    function proposeTest() external returns (uint256) {
+    address[] memory targets = new address[](1);
+    uint256[] memory values = new uint256[](1);
+    bytes[] memory calldatas = new bytes[](1);
+
+    targets[0] = address(this);
+    values[0] = 0;
+    calldatas[0] = "";
+
+    return propose(
+        targets,
+        values,
+        calldatas,
+        "Test proposal"
+    );
+    }
 }
