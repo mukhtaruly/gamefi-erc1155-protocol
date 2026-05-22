@@ -33,11 +33,11 @@ contract GameGovernor is
     }
 
     function votingDelay() public pure override returns (uint256) {
-        return 1 days;
+        return 1;
     }
 
     function votingPeriod() public pure override returns (uint256) {
-        return 1 weeks;
+        return 10;
     }
 
     function proposalThreshold() public view override returns (uint256) {

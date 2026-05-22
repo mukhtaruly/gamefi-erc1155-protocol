@@ -12,8 +12,11 @@ import {LPToken} from "./LPToken.sol";
 contract ResourceAMM is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
-    IERC20 public immutable tokenA;
-    IERC20 public immutable tokenB;
+    address public tokenA;
+    address public tokenB;
+
+    IERC20 public immutable TOKEN_A;
+    IERC20 public immutable TOKEN_B;
 
     LPToken public immutable lpToken;
 
@@ -29,20 +32,44 @@ contract ResourceAMM is Ownable, ReentrancyGuard {
     error InvalidRatio();
     error InvariantViolation();
 
-    event LiquidityAdded(address indexed provider, uint256 amountA, uint256 amountB, uint256 liquidity);
-    event LiquidityRemoved(address indexed provider, uint256 amountA, uint256 amountB, uint256 liquidity);
-    event Swapped(
-        address indexed trader, address indexed tokenIn, address indexed tokenOut, uint256 amountIn, uint256 amountOut
+    event LiquidityAdded(
+        address indexed provider,
+        uint256 amountA,
+        uint256 amountB,
+        uint256 liquidity
     );
 
-    constructor(address _tokenA, address _tokenB) Ownable(msg.sender) {
-        tokenA = IERC20(_tokenA);
-        tokenB = IERC20(_tokenB);
+    event LiquidityRemoved(
+        address indexed provider,
+        uint256 amountA,
+        uint256 amountB,
+        uint256 liquidity
+    );
+
+    event Swapped(
+        address indexed trader,
+        address indexed tokenIn,
+        address indexed tokenOut,
+        uint256 amountIn,
+        uint256 amountOut
+    );
+
+    constructor(address _tokenA, address _tokenB)
+        Ownable(msg.sender)
+    {
+        tokenA = _tokenA;
+        tokenB = _tokenB;
+
+        TOKEN_A = IERC20(_tokenA);
+        TOKEN_B = IERC20(_tokenB);
 
         lpToken = new LPToken();
     }
 
-    function addLiquidity(uint256 amountA, uint256 amountB) external nonReentrant {
+    function addLiquidity(
+        uint256 amountA,
+        uint256 amountB
+    ) external nonReentrant {
         if (amountA == 0 || amountB == 0) {
             revert InvalidAmount();
         }
@@ -64,49 +91,89 @@ contract ResourceAMM is Ownable, ReentrancyGuard {
             revert InvalidLiquidity();
         }
 
-        tokenA.safeTransferFrom(msg.sender, address(this), amountA);
-        tokenB.safeTransferFrom(msg.sender, address(this), amountB);
+        TOKEN_A.safeTransferFrom(
+            msg.sender,
+            address(this),
+            amountA
+        );
+
+        TOKEN_B.safeTransferFrom(
+            msg.sender,
+            address(this),
+            amountB
+        );
 
         reserveA += amountA;
         reserveB += amountB;
 
         lpToken.mint(msg.sender, liquidity);
 
-        emit LiquidityAdded(msg.sender, amountA, amountB, liquidity);
+        emit LiquidityAdded(
+            msg.sender,
+            amountA,
+            amountB,
+            liquidity
+        );
     }
 
-    function removeLiquidity(uint256 liquidity) external nonReentrant {
+    function removeLiquidity(
+        uint256 liquidity
+    ) external nonReentrant {
         uint256 totalSupply = lpToken.totalSupply();
 
         if (liquidity == 0 || totalSupply == 0) {
             revert InvalidLiquidity();
         }
 
-        uint256 amountA = (reserveA * liquidity) / totalSupply;
+        uint256 amountA =
+            (reserveA * liquidity) / totalSupply;
 
-        uint256 amountB = (reserveB * liquidity) / totalSupply;
+        uint256 amountB =
+            (reserveB * liquidity) / totalSupply;
 
         reserveA -= amountA;
         reserveB -= amountB;
 
         lpToken.burn(msg.sender, liquidity);
 
-        tokenA.safeTransfer(msg.sender, amountA);
+        TOKEN_A.safeTransfer(msg.sender, amountA);
 
-        tokenB.safeTransfer(msg.sender, amountB);
+        TOKEN_B.safeTransfer(msg.sender, amountB);
 
-        emit LiquidityRemoved(msg.sender, amountA, amountB, liquidity);
+        emit LiquidityRemoved(
+            msg.sender,
+            amountA,
+            amountB,
+            liquidity
+        );
     }
 
-    function swapAForB(uint256 amountIn, uint256 minAmountOut) external nonReentrant returns (uint256 amountOut) {
+    function swapAForB(
+        uint256 amountIn,
+        uint256 minAmountOut
+    )
+        external
+        nonReentrant
+        returns (uint256 amountOut)
+    {
         uint256 oldK = reserveA * reserveB;
-        amountOut = _getAmountOut(amountIn, reserveA, reserveB);
+
+        amountOut =
+            _getAmountOut(
+                amountIn,
+                reserveA,
+                reserveB
+            );
 
         if (amountOut < minAmountOut) {
             revert InsufficientOutput();
         }
 
-        tokenA.safeTransferFrom(msg.sender, address(this), amountIn);
+        TOKEN_A.safeTransferFrom(
+            msg.sender,
+            address(this),
+            amountIn
+        );
 
         reserveA += amountIn;
         reserveB -= amountOut;
@@ -115,20 +182,46 @@ contract ResourceAMM is Ownable, ReentrancyGuard {
             revert InvariantViolation();
         }
 
-        tokenB.safeTransfer(msg.sender, amountOut);
+        TOKEN_B.safeTransfer(
+            msg.sender,
+            amountOut
+        );
 
-        emit Swapped(msg.sender, address(tokenA), address(tokenB), amountIn, amountOut);
+        emit Swapped(
+            msg.sender,
+            tokenA,
+            tokenB,
+            amountIn,
+            amountOut
+        );
     }
 
-    function swapBForA(uint256 amountIn, uint256 minAmountOut) external nonReentrant returns (uint256 amountOut) {
+    function swapBForA(
+        uint256 amountIn,
+        uint256 minAmountOut
+    )
+        external
+        nonReentrant
+        returns (uint256 amountOut)
+    {
         uint256 oldK = reserveA * reserveB;
-        amountOut = _getAmountOut(amountIn, reserveB, reserveA);
+
+        amountOut =
+            _getAmountOut(
+                amountIn,
+                reserveB,
+                reserveA
+            );
 
         if (amountOut < minAmountOut) {
             revert InsufficientOutput();
         }
 
-        tokenB.safeTransferFrom(msg.sender, address(this), amountIn);
+        TOKEN_B.safeTransferFrom(
+            msg.sender,
+            address(this),
+            amountIn
+        );
 
         reserveB += amountIn;
         reserveA -= amountOut;
@@ -137,20 +230,54 @@ contract ResourceAMM is Ownable, ReentrancyGuard {
             revert InvariantViolation();
         }
 
-        tokenA.safeTransfer(msg.sender, amountOut);
+        TOKEN_A.safeTransfer(
+            msg.sender,
+            amountOut
+        );
 
-        emit Swapped(msg.sender, address(tokenB), address(tokenA), amountIn, amountOut);
+        emit Swapped(
+            msg.sender,
+            tokenB,
+            tokenA,
+            amountIn,
+            amountOut
+        );
     }
 
-    function getAmountOut(uint256 amountIn, uint256 reserveIn, uint256 reserveOut) external pure returns (uint256) {
-        return _getAmountOut(amountIn, reserveIn, reserveOut);
+    function getAmountOut(
+        uint256 amountIn,
+        uint256 reserveIn,
+        uint256 reserveOut
+    )
+        external
+        pure
+        returns (uint256)
+    {
+        return
+            _getAmountOut(
+                amountIn,
+                reserveIn,
+                reserveOut
+            );
     }
 
-    function getK() external view returns (uint256) {
+    function getK()
+        external
+        view
+        returns (uint256)
+    {
         return reserveA * reserveB;
     }
 
-    function _getAmountOut(uint256 amountIn, uint256 reserveIn, uint256 reserveOut) internal pure returns (uint256) {
+    function _getAmountOut(
+        uint256 amountIn,
+        uint256 reserveIn,
+        uint256 reserveOut
+    )
+        internal
+        pure
+        returns (uint256)
+    {
         if (amountIn == 0) {
             revert InvalidAmount();
         }
@@ -159,8 +286,15 @@ contract ResourceAMM is Ownable, ReentrancyGuard {
             revert InvalidLiquidity();
         }
 
-        uint256 amountInWithFee = amountIn * FEE_NUMERATOR;
+        uint256 amountInWithFee =
+            amountIn * FEE_NUMERATOR;
 
-        return (reserveOut * amountInWithFee) / (reserveIn * FEE_DENOMINATOR + amountInWithFee);
+        return
+            (reserveOut * amountInWithFee)
+                / (
+                    reserveIn
+                        * FEE_DENOMINATOR
+                        + amountInWithFee
+                );
     }
 }
